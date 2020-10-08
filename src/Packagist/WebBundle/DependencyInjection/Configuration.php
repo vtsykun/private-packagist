@@ -31,6 +31,7 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('format')->defaultValue('zip')->end()
                         ->scalarNode('basedir')->cannotBeEmpty()->end()
                         ->scalarNode('endpoint')->cannotBeEmpty()->end()
+                        ->scalarNode('cache_duration')->defaultValue(30 * 60)->end()
                         ->booleanNode('include_archive_checksum')->defaultFalse()->end()
                     ->end()
                 ->end()

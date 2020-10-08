@@ -44,6 +44,14 @@ class DistConfig
     }
 
     /**
+     * @return int
+     */
+    public function getCacheDuration(): int
+    {
+        return $this->config['cache_duration'] ?? 1800;
+    }
+
+    /**
      * @param string $name
      * @param string $reference
      * @param string $version

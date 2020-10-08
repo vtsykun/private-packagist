@@ -971,4 +971,10 @@ class Version
     {
         return $this->name.' '.$this->version.' ('.$this->normalizedVersion.')';
     }
+
+    public function __clone()
+    {
+        // Ensure that the clone can't persist over the original.
+        $this->id = null;
+    }
 }

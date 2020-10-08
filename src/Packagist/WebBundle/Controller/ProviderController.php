@@ -97,6 +97,7 @@ class ProviderController extends Controller
      */
     public function zipballAction(Package $package, $hash)
     {
+      /** @var DistManager $distManager */
         $distManager = $this->container->get(DistManager::class);
         if (false === \preg_match('{[a-f0-9]{40}}i', $hash, $match)) {
             return new JsonResponse(['status' => 'error', 'message' => 'Not Found'], 404);
@@ -111,9 +112,9 @@ class ProviderController extends Controller
             }
         );
 
-        // Try to download from cache
+        // Try to download from cache or create the zip if missing.
         if ($versions->count() === 0) {
-            list($path, $versionName) = $distManager->lookupInCache($match[0], $package->getName());
+            list($path, $versionName) = $distManager->resolvePackage($package, $match[0]);
             if (null !== $versionName) {
                 $version = $package->getVersions()
                     ->filter(

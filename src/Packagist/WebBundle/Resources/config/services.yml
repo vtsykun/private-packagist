@@ -206,6 +206,8 @@ services:
         arguments:
             - '@packagist.dist_config'
             - '@packagist_factory'
+            - '@logger'
+            - '@packagist_cache'
 
     Packagist\WebBundle\Composer\PackagistFactory:
         alias: packagist_factory

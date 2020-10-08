@@ -143,3 +143,5 @@ packagist_web:
         format: zip
         basedir: '%kernel.root_dir%/zipball'
         endpoint: '%packagist_dist_host%'
+        # How long to cache archive responses for.
+        cache_duration: 1800

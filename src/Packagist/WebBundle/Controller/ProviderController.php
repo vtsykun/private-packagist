@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-
+   
 class ProviderController extends Controller
 {
     /**
@@ -121,7 +121,7 @@ class ProviderController extends Controller
                             return $versionName === $version->getVersion();
                         }
                 )->first();
-                if ($version && $this->isGranted('ROLE_MAINTAINER', $version)) {
+                if ($version && ($this->isGranted('ROLE_MAINTAINER', $version) || $this->container->getParameter('packagist_web.allow_read_only_access'))) {
                     return new BinaryFileResponse($path);
                 }
             }
@@ -129,9 +129,10 @@ class ProviderController extends Controller
 
         /** @var Version $version */
         foreach ($versions as $version) {
-            if (!$this->isGranted('ROLE_MAINTAINER', $version)) {
+            if (!$this->isGranted('ROLE_MAINTAINER', $version) && !$this->container->getParameter('packagist_web.allow_read_only_access')) {
                 continue;
             }
+            
 
             if ($path = $distManager->getDistPath($version)) {
                 return new BinaryFileResponse($path);

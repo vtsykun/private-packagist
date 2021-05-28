@@ -1,0 +1,68 @@
+security:
+    encoders:
+        FOS\UserBundle\Model\UserInterface:
+            algorithm:        sha512
+            encode_as_base64: false
+            iterations:       1
+
+    providers:
+        packagist:
+            id: packagist.user_provider
+
+    firewalls:
+        main:
+            pattern:      .*
+            form_login:
+                provider:       packagist
+                login_path:     /login
+                use_forward:    false
+                check_path:     /login_check
+                failure_path:   null
+            remember_me:
+                secret: '%remember_me.secret%'
+                user_providers: packagist
+                name: pauth
+                always_remember_me: true
+                lifetime: 31104000 # 1y
+            logout:       true
+            anonymous:    true
+            switch_user:
+                provider: packagist
+
+    access_control:
+        # The WDT has to be allowed to anonymous users to avoid requiring the login with the AJAX request
+        - { path: ^/_wdt/, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/_profiler/, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        # AsseticBundle paths used when using the controller for assets
+        - { path: ^/js/, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/css/, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        # URL of FOSUserBundle which need to be available to anonymous users
+        - { path: ^/login$, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/login/, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/resetting/, role: IS_AUTHENTICATED_ANONYMOUSLY }
+
+        # Packagist
+        - { path: (^(/change-password|/profile/|/search|/logout|/packages/|/versions/))+, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: (^(/packages.json$|/p/|/zipball/|/downloads/))+, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: (^(/api/webhook-invoke/))+, role: ROLE_USER }
+        - { path: (^(/api/(create-package|update-package|github|bitbucket)))$, role: ROLE_MAINTAINER }
+        - { path: ^/$, role: IS_AUTHENTICATED_ANONYMOUSLY }
+
+        # Maintainers
+        - { path: (^(/users/(.+)/packages))+, role: ROLE_MAINTAINER }
+        - { path: (^(/users/(.+)/favorites))+, role: ROLE_MAINTAINER }
+        - { path: (^(/explore|/jobs/))+, role: ROLE_MAINTAINER }
+
+        # Secured part of the site
+        # This config requires being logged for the whole site and having the admin role for the admin part.
+        # Change these rules to adapt them to your needs
+        - { path: ^.*$, role: ROLE_ADMIN }
+
+    role_hierarchy:
+        ROLE_UPDATE_PACKAGES: ~
+        ROLE_DELETE_PACKAGES: ~
+        ROLE_EDIT_PACKAGES: ~
+
+        ROLE_MAINTAINER:  [ ROLE_USER, ROLE_UPDATE_PACKAGES, ROLE_EDIT_PACKAGES, ROLE_DELETE_PACKAGES ]
+        ROLE_ADMIN:       [ ROLE_MAINTAINER ]
+        ROLE_SUPERADMIN:  [ ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH ]

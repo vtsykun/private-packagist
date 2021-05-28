@@ -39,7 +39,7 @@ class PackageController extends Controller
      */
     public function allAction(Request $req)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess()) {
             throw new AccessDeniedException;
         }
 
@@ -53,7 +53,7 @@ class PackageController extends Controller
      */
     public function listAction(Request $req)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess()) {
             throw new AccessDeniedException;
         }
 
@@ -127,7 +127,8 @@ class PackageController extends Controller
      */
     public function fetchInfoAction(Request $req)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess()) {
             throw new AccessDeniedException;
         }
 
@@ -186,7 +187,7 @@ class PackageController extends Controller
      */
     public function viewVendorAction($vendor)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess()) {
             throw new AccessDeniedException;
         }
 
@@ -219,7 +220,8 @@ class PackageController extends Controller
      */
     public function viewProvidersAction($name)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess()) {
             throw new AccessDeniedException;
         }
 
@@ -271,7 +273,8 @@ class PackageController extends Controller
     public function viewPackageAction(Request $req, $name)
     {
         if (preg_match('{^(?P<pkg>ext-[a-z0-9_.-]+?)/(?P<method>dependents|suggesters)$}i', $name, $match)) {
-            if (!$this->isGranted('ROLE_MAINTAINER')) {
+
+            if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess()) {
                 throw new AccessDeniedHttpException;
             }
             return $this->{$match['method'].'Action'}($req, $match['pkg']);
@@ -287,7 +290,7 @@ class PackageController extends Controller
             throw new NotFoundHttpException;
         }
 
-        if (!$this->isGranted('ROLE_MAINTAINER', $package)) {
+        if (!$this->isGranted('ROLE_MAINTAINER', $package) && !$this->allowReadOnlyAccess()) {
             throw new NotFoundHttpException;
         }
 
@@ -443,10 +446,9 @@ class PackageController extends Controller
      */
     public function viewPackageDownloadsAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess()) {
             throw new AccessDeniedHttpException;
         }
-
         /** @var PackageRepository $repo */
         $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Package');
 
@@ -506,7 +508,7 @@ class PackageController extends Controller
 
         /** @var VersionRepository $repo  */
         $repo = $this->getDoctrine()->getRepository('PackagistWebBundle:Version');
-        if (!$this->isGranted('ROLE_MAINTAINER', $repo->find($versionId))) {
+        if (!$this->isGranted('ROLE_MAINTAINER', $repo->find($versionId) && !$this->allowReadOnlyAccess())) {
             throw new AccessDeniedHttpException;
         }
 
@@ -887,10 +889,10 @@ class PackageController extends Controller
      */
     public function statsAction(Request $req, Package $package)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess()) {
             throw new AccessDeniedException;
         }
-
         $versions = $package->getVersions()->toArray();
         usort($versions, Package::class.'::sortVersions');
         $date = $this->guessStatsStartDate($package);
@@ -934,10 +936,9 @@ class PackageController extends Controller
      */
     public function dependentsAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess()) {
             throw new AccessDeniedException;
         }
-
         $page = $req->query->get('page', 1);
 
         /** @var PackageRepository $repo */
@@ -967,10 +968,9 @@ class PackageController extends Controller
      */
     public function suggestersAction(Request $req, $name)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess()) {
             throw new AccessDeniedException;
         }
-
         $page = $req->query->get('page', 1);
 
         /** @var PackageRepository $repo */
@@ -1001,10 +1001,9 @@ class PackageController extends Controller
      */
     public function overallStatsAction(Request $req, Package $package, Version $version = null)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess() ) {
             throw new AccessDeniedException;
         }
-
         if ($from = $req->query->get('from')) {
             $from = new DateTimeImmutable($from);
         } else {
@@ -1080,10 +1079,10 @@ class PackageController extends Controller
      */
     public function versionStatsAction(Request $req, Package $package, $version)
     {
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->allowReadOnlyAccess()) {
             throw new AccessDeniedException;
         }
-
         $normalizer = new VersionParser;
         $normVersion = $normalizer->normalize($version);
 
@@ -1233,4 +1232,13 @@ class PackageController extends Controller
 
         return $intervals[$average];
     }
+
+    /**
+     * @return bool
+     */
+    private function allowReadOnlyAccess()
+    {
+      return $this->container->getParameter('packagist_web.allow_read_only_access');
+    }
+
 }

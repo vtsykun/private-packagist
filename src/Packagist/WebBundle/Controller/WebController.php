@@ -89,8 +89,8 @@ class WebController extends Controller
             if ($perPage <= 0 || $perPage > 100) {
                 $perPage = max(0, min(100, $perPage));
             }
-
-            $allowed = $this->isGranted('ROLE_MAINTAINER') ? null :
+            $allowed = $this->isGranted('ROLE_MAINTAINER') || 
+              $this->container->getParameter('packagist_web.allow_read_only_access') ? null :
                 $this->getDoctrine()
                     ->getRepository('PackagistWebBundle:Group')
                     ->getAllowedPackagesForUser($this->getUser(), false);
@@ -356,7 +356,7 @@ class WebController extends Controller
         $qb = $this->get('doctrine')->getManager()->createQueryBuilder();
         $qb->from('PackagistWebBundle:Package', 'p');
         $repo = $this->get('doctrine')->getRepository('PackagistWebBundle:Package');
-        if (!$this->isGranted('ROLE_MAINTAINER')) {
+        if (!$this->isGranted('ROLE_MAINTAINER') && !$this->container->getParameter('packagist_web.allow_read_only_access')) {
             $packages = $this->get('doctrine')->getRepository('PackagistWebBundle:Group')
                 ->getAllowedPackagesForUser($this->getUser());
             $qb->andWhere('p.id IN (:ids)')

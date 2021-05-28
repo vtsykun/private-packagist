@@ -138,6 +138,7 @@ okvpn_cron:
         - Packagist\WebBundle\Cron\WorkerStamp
 
 packagist_web:
+    allow_read_only_access: false
     archive: true
     archive_options:
         format: zip

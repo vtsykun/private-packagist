@@ -1,5 +1,6 @@
 parameters:
     packagist_web.archive: []
+    packagist_web.allow_read_only_access: true
 
 services:
     packagist.twig.extension:

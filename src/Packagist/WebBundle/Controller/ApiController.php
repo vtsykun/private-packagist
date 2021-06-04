@@ -79,7 +79,7 @@ class ApiController extends Controller
     {
         // parse the payload
         $payload = json_decode($request->request->get('payload'), true);
-        if (!$payload && $request->headers->get('Content-Type') === 'application/json') {
+        if (!$payload && 0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
             $payload = json_decode($request->getContent(), true);
         }
 
@@ -110,6 +110,15 @@ class ApiController extends Controller
         } elseif (isset($payload['repository']['links']['html']['href'])) { // bitbucket push event payload
             $urlRegex = '{^(?:https?://|git://|git@)?(?:api\.)?(?P<host>bitbucket\.org)[/:](?P<path>[\w.-]+/[\w.-]+?)(\.git)?/?$}i';
             $url = $payload['repository']['links']['html']['href'];
+        } elseif (isset($payload['repository']['links']['clone'][0]['href'])) { // bitbucket on-premise
+            $urlRegex = '{^(?:ssh://git@|https?://|git://|git@)?(?P<host>[a-z0-9.-]+)(?::[0-9]+/|[:/])(?P<path>[\w.-]+(?:/[\w.-]+?)+)(?:\.git|/)?$}i';
+            $url = '';
+            foreach ($payload['repository']['links']['clone'] as $id => $data) {
+                if ($data['name'] == 'ssh') {
+                    $url = $data['href'];
+                    break;
+                }
+            }
         } elseif (isset($payload['canon_url']) && isset($payload['repository']['absolute_url'])) { // bitbucket post hook (deprecated)
             $urlRegex = '{^(?:https?://|git://|git@)?(?P<host>bitbucket\.org)[/:](?P<path>[\w.-]+/[\w.-]+?)(\.git)?/?$}i';
             $url = $payload['canon_url'] . $payload['repository']['absolute_url'];
@@ -155,7 +164,7 @@ class ApiController extends Controller
         }
 
         $payload = json_decode($request->request->get('payload'), true);
-        if (!$payload && $request->headers->get('Content-Type') === 'application/json') {
+        if (!$payload && 0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
             $payload = json_decode($request->getContent(), true);
         }
 
